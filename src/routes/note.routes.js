@@ -1,27 +1,19 @@
 const express = require("express");
 const router = express.Router();
 
-const {
-  createNote,
-  createNotesBulk,
-  getAllNotes,
-  getNoteById,
-  replaceNote,
-  updateNote,
-  deleteNote,
-  deleteNotesBulk,
-} = require("../controllers/note.controller");
+const controller = require("../controllers/note.controller");
 
-router.post("/", createNote);
-router.post("/bulk", createNotesBulk);
+router.post("/", controller.createNote);
+router.post("/bulk", controller.createNotesBulk);
 
-router.get("/", getAllNotes);
-router.get("/:id", getNoteById);
+router.get("/", controller.getAllNotes);
+router.get("/:id", controller.getNoteById);
 
-router.put("/:id", replaceNote);
-router.patch("/:id", updateNote);
+router.put("/:id", controller.replaceNote);
+router.patch("/:id", controller.updateNote);
 
-router.delete("/bulk", deleteNotesBulk);
-router.delete("/:id", deleteNote);
+// 🔥 MUST BE BEFORE :id
+router.delete("/bulk", controller.deleteNotesBulk);
+router.delete("/:id", controller.deleteNote);
 
 module.exports = router;

@@ -3,7 +3,7 @@ const Note = require("../models/note.model");
 
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-// 1. Create single note
+// 1. Create note
 exports.createNote = async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -23,12 +23,8 @@ exports.createNote = async (req, res) => {
       message: "Note created successfully",
       data: note,
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-      data: null,
-    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
   }
 };
 
@@ -37,7 +33,7 @@ exports.createNotesBulk = async (req, res) => {
   try {
     const { notes } = req.body;
 
-    if (!notes || !Array.isArray(notes) || notes.length === 0) {
+    if (!Array.isArray(notes) || notes.length === 0) {
       return res.status(400).json({
         success: false,
         message: "Notes array is required",
@@ -45,24 +41,19 @@ exports.createNotesBulk = async (req, res) => {
       });
     }
 
-    const createdNotes = await Note.insertMany(notes);
+    const result = await Note.insertMany(notes);
 
     res.status(201).json({
       success: true,
-      message: `${createdNotes.length} notes created successfully`,
-      data: createdNotes,
+      message: `${result.length} notes created successfully`,
+      data: result,
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-      data: null,
-    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
   }
 };
 
-
-// 3. Get all notes
+// 3. Get all
 exports.getAllNotes = async (req, res) => {
   try {
     const notes = await Note.find();
@@ -72,16 +63,12 @@ exports.getAllNotes = async (req, res) => {
       message: "Notes fetched successfully",
       data: notes,
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-      data: null,
-    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
   }
 };
 
-// 4. Get single note
+// 4. Get by ID
 exports.getNoteById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -109,12 +96,8 @@ exports.getNoteById = async (req, res) => {
       message: "Note fetched successfully",
       data: note,
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-      data: null,
-    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
   }
 };
 
@@ -150,16 +133,12 @@ exports.replaceNote = async (req, res) => {
       message: "Note replaced successfully",
       data: note,
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-      data: null,
-    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
   }
 };
 
-// 6. PATCH (partial update)
+// 6. PATCH
 exports.updateNote = async (req, res) => {
   try {
     const { id } = req.params;
@@ -198,16 +177,12 @@ exports.updateNote = async (req, res) => {
       message: "Note updated successfully",
       data: note,
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-      data: null,
-    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
   }
 };
 
-// 7. Delete single
+// 7. Delete one
 exports.deleteNote = async (req, res) => {
   try {
     const { id } = req.params;
@@ -235,25 +210,17 @@ exports.deleteNote = async (req, res) => {
       message: "Note deleted successfully",
       data: null,
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-      data: null,
-    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
   }
 };
 
-// ✅ 8. Bulk delete (FIXED)
+// 8. Bulk delete
 exports.deleteNotesBulk = async (req, res) => {
   try {
-    console.log("BODY:", req.body); // debug
+    const { ids } = req.body;
 
-    // accept both 'ids' and 'id'
-    const ids = req.body.ids || req.body.id;
-
-    // validation
-    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    if (!Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({
         success: false,
         message: "IDs array is required",
@@ -261,30 +228,14 @@ exports.deleteNotesBulk = async (req, res) => {
       });
     }
 
-    // validate each id
-    const invalidIds = ids.filter((id) => !isValidId(id));
-    if (invalidIds.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "One or more IDs are invalid",
-        data: invalidIds,
-      });
-    }
+    const result = await Note.deleteMany({ _id: { $in: ids } });
 
-    const result = await Note.deleteMany({
-      _id: { $in: ids },
-    });
-
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       message: `${result.deletedCount} notes deleted successfully`,
       data: null,
     });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-      data: null,
-    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, data: null });
   }
 };
