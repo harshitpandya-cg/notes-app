@@ -244,11 +244,15 @@ exports.deleteNote = async (req, res) => {
   }
 };
 
-// 8. Bulk delete
+// ✅ 8. Bulk delete (FIXED)
 exports.deleteNotesBulk = async (req, res) => {
   try {
-    const { ids } = req.body;
+    console.log("BODY:", req.body); // debug
 
+    // accept both 'ids' and 'id'
+    const ids = req.body.ids || req.body.id;
+
+    // validation
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({
         success: false,
@@ -257,17 +261,27 @@ exports.deleteNotesBulk = async (req, res) => {
       });
     }
 
+    // validate each id
+    const invalidIds = ids.filter((id) => !isValidId(id));
+    if (invalidIds.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "One or more IDs are invalid",
+        data: invalidIds,
+      });
+    }
+
     const result = await Note.deleteMany({
       _id: { $in: ids },
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: `${result.deletedCount} notes deleted successfully`,
       data: null,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
       data: null,
